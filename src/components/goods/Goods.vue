@@ -27,16 +27,22 @@
         							<span class="now">￥{{food.price}}</span>
         							<del class="old" v-show="food.oldPrice">￥{{food.oldPrice}}</del>
         						</div>
+        						<div class="control">
+        							<cart-control :food="food"></cart-control>
+        						</div>
         					</div>
         				</li>
         			</ul>
         		</li>
         	</ul>
         </div>
+        <cart :selectedFoods="selectedFoods" :delivery-price="seller.deliveryPrice" :min-price="seller.minPrice"></cart>
     </div>
 </template>
 <script>
 	import BScroll from 'better-scroll'
+	import Cart from '../cart/cart';
+	import CartControl from '../cartcontrol/cartcontrol';
 	const CODE_OK = 0;
     const iconMap = ['decrease', 'discount', 'special', 'invoice', 'guarantee'];
     // 获取 currentIndex 的纯函数, 也可选择将 currentIndex 写为计算属性,
@@ -57,12 +63,29 @@
         props: {
         	seller: Object
         },
+        components:{
+        	cart: Cart,
+        	'cart-control': CartControl
+        },
         data() {
         	return {
         		goods:[],
         		iconMap,
         		currentIndex: 0,
         		listHeight: []
+        	}
+        },
+        computed: {
+        	selectedFoods() {
+        		let foods = [];
+        		this.goods.forEach( good => {
+        			good.foods.forEach( food => {
+        				if (food.count) {
+        					foods.push(food);
+        				}
+        			} )
+        		});
+        		return foods;
         	}
         },
         created() {
@@ -96,7 +119,8 @@
         		console.log(this.$refs.main);
         		let scrollY;
         		this.mainScroller = new BScroll(this.$refs.main, {
-        			probeType: 3
+        			probeType: 3,
+        			click: true
         		});
         		function toGetIndex() {
 //      			console.log(this.scrollY)
@@ -248,6 +272,9 @@
 						font-size: 10px;
 						color: rgb(147,153,159);
 					}
+				}
+				.control {
+					float: right;
 				}
 			}
 		}

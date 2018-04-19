@@ -5,7 +5,7 @@
     <div class="content">
       body
     </div>
-    <router-view></router-view>
+    <router-view :seller="seller"></router-view>
   </div>
 </template>
 
