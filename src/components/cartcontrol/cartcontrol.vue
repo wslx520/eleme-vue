@@ -14,6 +14,7 @@
 </template>
 
 <script>
+	import Bus from '@/EventBus';
 	export default {
 		props: {
 			food: {
@@ -35,6 +36,7 @@
 				} else {
 					this.food.count++;
 				}
+				Bus.$emit('ball-drop', event.target);
 				console.log(this.food.count)
 			},
 			decreaseCart(event) {
@@ -50,6 +52,9 @@
 </script>
 
 <style lang="scss">
+	%ib {
+		display: inline-block;
+	}
 .cartcontrol {
 	font-size: 0;
 	.decrease,.count,.add {
@@ -63,7 +68,7 @@
 		i {
 			
 			transition: all 0.4s linear;
-			display: inline-block;
+			@extend %ib;
 		}
 	}
 	.count {

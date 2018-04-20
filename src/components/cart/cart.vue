@@ -17,11 +17,34 @@
 				</div>
 			</div>
 		</div>
+		<div class="ball-container">
+			<transition-group
+				@before-enter="beforeEnter"
+				@enter="enter"
+				@after-enter="afterEnter">
+				<div class="ball" v-for="(ball, index) in balls" v-show="ball.show" :key="index">
+					<div class="inner"></div>
+				</div>
+			</transition-group>
+		</div>
 	</div>
 </template>
 
 <script>
+	import Bus from '@/EventBus';
 	export default {
+		data() {
+			return {
+				balls: [
+					{show: false},
+					{show: false},
+					{show: false},
+					{show: false},
+					{show: false}
+				],
+				dropedBalls: []
+			}
+		},
 		props: {
 			deliveryPrice: {
 				type: Number,
@@ -70,6 +93,62 @@
 					return 'enough'
 				}
 			},
+		},
+		methods:{
+			drop(el) {
+				let balls = this.balls;
+				let ball = balls.find( b => b.show === false);
+				if (ball) {
+					ball.show = true;
+					ball.el = el;
+					this.dropedBalls.push(ball);
+				}
+			},
+			beforeEnter(el) {
+				let count = this.balls.length;
+				while(count--) {
+					let ball = this.balls[count];
+					if (ball.show) {
+						const bound = ball.el.getBoundingClientRect();
+						let x = bound.left - 32;
+						console.log(x);
+						console.log(window.innerHeight, bound.top, -(window.innerHeight - bound.top - 22))
+						let y = -(window.innerHeight - bound.top - 22);
+						el.style.display = '';
+						el.style.webkitTransform = `translate3d(0,${y}px,0)`;
+						el.style.transform = `translate3d(0,${y}px,0)`;
+						let inner = el.getElementsByClassName('inner')[0];
+						inner.style.webkitTransform = `translate3d(${x}px,0,0)`;
+						inner.style.transform = `translate3d(${x}px,0,0)`;
+						
+					}
+				}
+			},
+			enter(el, done) {
+				let off = el.offsetHeight;
+				this.$nextTick(() => {
+					el.style.webkitTransform = 'translate3d(0,0,0)';
+					el.style.transform = 'translate3d(0,0,0)';
+					let inner = el.getElementsByClassName('inner')[0];
+					inner.style.webkitTransform = 'translate3d(0,0,0)';
+					inner.style.transform = 'translate3d(0,0,0)';
+					done();
+				})
+			},
+			afterEnter(el) {
+				let ball = this.dropedBalls.shift();
+				if (ball) {
+					ball.show = false;
+					el.display = 'none';
+				}
+			}
+		},
+		created () {
+			let self = this;
+			Bus.$on('ball-drop', function (el) {
+				console.log(el);
+				self.drop(el);
+			})
 		}
 	}
 </script>
@@ -185,5 +264,26 @@
 		}
 	}
 	
+	.ball-container {
+		.ball {
+			position: fixed;
+			left: 32px;
+			bottom: 22px;
+			z-index: 1000;
+			transition: all 0.4s cubic-bezier(.29,-0.46,.83,.67);
+			.inner {
+				width: 16px;
+				height: 16px;
+				-webkit-border-radius: 50%;
+				-moz-border-radius: 50%;
+				border-radius: 50%;
+				background-color: rgb(0,160,220);
+				transition: all 0.4s linear;
+			}
+			&.drop-enter-active, &.drop-leave-active {
+				
+			}
+		}
+	}
 }
 </style>

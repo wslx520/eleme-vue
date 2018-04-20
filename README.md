@@ -4,6 +4,8 @@
 
 使用 Vue 2.0
 
+所以 events + $dispatch 的方式 换成了 event bus
+
 stylus 换成 sass
 
 vue-resource 换成了 axios
