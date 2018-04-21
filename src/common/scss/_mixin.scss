@@ -5,4 +5,25 @@
     }
     
 }
-  
+
+// 禁用样式，加!important 
+@mixin disabled($bgColor:#e6e6e6,$textColor:#ababab){ 
+    background-color: $bgColor !important; color: $textColor !important; cursor: not-allowed !important; 
+}
+
+@mixin fixed-ratio ($w:100%,$ratio:1) {
+    position: relative;
+    width: $w;
+    &:before {
+        content: '';
+        display: block;
+        padding-top: #{($ratio * 100) + '%'};
+    }
+    > .content {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+    }
+}

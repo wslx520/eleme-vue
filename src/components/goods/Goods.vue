@@ -15,7 +15,7 @@
         			<h1 class="title">{{item.name}}</h1>
         			<ul>
         				<li v-for="(food, f) in item.foods" class="food-item" :key="f">
-        					<div class="icon"><img :src="food.icon" alt="" /></div>
+        					<div class="icon" @click="showFood"><img :src="food.icon" alt="" /></div>
         					<div class="content">
         						<h2 class="name">{{food.name}}</h2>
         						<p class="desc">{{food.description}}</p>
@@ -36,13 +36,22 @@
         		</li>
         	</ul>
         </div>
+        <transition name="expand" 
+        	@before-enter="expandBefore"
+        	@enter="expandEnter"
+        	@after-enter="expandAfter">
+        	<food v-show="foodShown"></food>
+        </transition>
+        
         <cart :selectedFoods="selectedFoods" :delivery-price="seller.deliveryPrice" :min-price="seller.minPrice"></cart>
     </div>
 </template>
 <script>
 	import BScroll from 'better-scroll'
+	import Velocity from 'velocity-animate'
 	import Cart from '../cart/cart';
 	import CartControl from '../cartcontrol/cartcontrol';
+	import Food from '../food/food';
 	const CODE_OK = 0;
     const iconMap = ['decrease', 'discount', 'special', 'invoice', 'guarantee'];
     // 获取 currentIndex 的纯函数, 也可选择将 currentIndex 写为计算属性,
@@ -65,14 +74,17 @@
         },
         components:{
         	cart: Cart,
-        	'cart-control': CartControl
+        	'cart-control': CartControl,
+        	food: Food
         },
         data() {
         	return {
         		goods:[],
         		iconMap,
         		currentIndex: 0,
-        		listHeight: []
+        		listHeight: [],
+        		foodBox: {},
+        		foodShown: false
         	}
         },
         computed: {
@@ -143,6 +155,40 @@
         			height += item.clientHeight;
         			this.listHeight.push(height);
         		}
+        	},
+        	showFood(e) {
+        		const el = e.target;
+        		const box = el.getBoundingClientRect();
+        		this.foodBox = box;
+        		this.foodShown = true;
+        	},
+        	expandBefore(el) {
+        		el.style.opacity = 0;
+        		el.style.width = this.foodBox.width + 'px';
+        		el.style.height = this.foodBox.width + 'px';
+        		el.style.left = this.foodBox.left + 'px';
+        		el.style.top = this.foodBox.top + 'px';
+        		
+        	},
+        	expandEnter(el, done) {
+        		Velocity.animate(el, {
+        			width: '100%',
+        			height: '100%',
+        			left: 0, top: 0,
+        			opacity: 1
+        		}, {
+        			complete: done,
+        			duration: 500
+        		})
+        	},
+        	expandAfter(el) {
+        		el.style.opacity = 1;
+        		console.log(this.foodBox);
+//      		el.style.width = this.foodBox.width + 'px';
+//      		el.style.height = this.foodBox.width + 'px';
+//      		el.style.left = this.foodBox.left + 'px';
+//      		el.style.top = this.foodBox.top + 'px';
+//      		console.log(el);
         	}
         }
     }
@@ -279,5 +325,15 @@
 			}
 		}
 	}
+}
+.expand-enter-active, .expand-leave-active {
+	opacity: 1;
+	width: 100%;
+	height: 100%;
+	left: 0;
+	top: 0;
+}
+.expand-enter, .expand-leave-to {
+	
 }
 </style>
