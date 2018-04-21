@@ -1,6 +1,6 @@
 <template>
 	<div class="shopcart">
-		<div class="content">
+		<div class="content" @click="toggleList">
 			<div class="content-left">
 				<div class="logo-wrapper">
 					<div class="logo" :class="{highlight: totalCount > 0}">
@@ -12,7 +12,7 @@
 				<div class="desc">另需配送费￥{{deliveryPrice}}</div>
 			</div>
 			<div class="content-right">
-				<div class="pay" :class="paidClass">
+				<div class="pay" :class="paidClass" @click.stop.prevent="pay" >
 					{{paidDesc}}
 				</div>
 			</div>
@@ -27,12 +27,41 @@
 				</div>
 			</transition-group>
 		</div>
+		<transition name="fade">
+			<div class="list-mask" @click="fold = !fold" v-show="listShow"></div>
+		</transition>
+		<transition name="slide">
+			<div class="cart-list" v-show="listShow">
+				<div class="header">
+					<h1 class="title">购物车</h1>
+					<span class="clear" @click="clearCart">清空</span>	 
+				</div>
+				<div class="list-content">
+					<ul>
+						<li class="food" v-for="(food,i) in selectedFoods" :key="i">
+							<span class="name">{{food.name}}</span>
+							<div class="price">
+								<span>￥{{food.price*food.count}}</span>
+							</div>
+							<div class="control">
+								<cart-control :food="food"></cart-control>
+							</div>
+						</li>
+					</ul>
+				</div>
+			</div>	
+		</transition>
 	</div>
 </template>
 
 <script>
 	import Bus from '@/EventBus';
+	import CartControl from '../cartcontrol/cartcontrol';
+	let fold = true;
 	export default {
+		components: {
+			'cart-control': CartControl
+		},
 		data() {
 			return {
 				balls: [
@@ -42,7 +71,8 @@
 					{show: false},
 					{show: false}
 				],
-				dropedBalls: []
+				dropedBalls: [],
+				fold: true
 			}
 		},
 		props: {
@@ -62,6 +92,15 @@
 			}
 		},
 		computed: {
+			listShow() {
+//				return true;
+				if (!this.totalCount) {
+					return false;
+				}
+				let show = !this.fold;
+				fold = !fold;
+				return show;
+			},
 			totalPrice() {
 				let total = 0;
 				this.selectedFoods.forEach((food) => {
@@ -111,9 +150,9 @@
 					if (ball.show) {
 						const bound = ball.el.getBoundingClientRect();
 						let x = bound.left - 32;
-						console.log(x);
-						console.log(window.innerHeight, bound.top, -(window.innerHeight - bound.top - 22))
-						let y = -(window.innerHeight - bound.top - 22);
+//						console.log(x);
+//						console.log(window.innerHeight, bound.top, -(window.innerHeight - bound.top - 22))
+						let y = -(bound.top + 11);
 						el.style.display = '';
 						el.style.webkitTransform = `translate3d(0,${y}px,0)`;
 						el.style.transform = `translate3d(0,${y}px,0)`;
@@ -141,6 +180,23 @@
 					ball.show = false;
 					el.display = 'none';
 				}
+			},
+			toggleList() {
+				if (!this.totalCount) {
+					return;
+				}
+				this.fold = !this.fold;
+			},
+			clearCart() {
+				this.selectedFoods.forEach(food => food.count = 0);
+				this.fold = true;
+			},
+			pay(e) {
+				if (this.totalPrice < this.minPrice) {
+					return;
+				}
+				window.alert(`支付${this.totalPrice}元`);
+				
 			}
 		},
 		created () {
@@ -165,6 +221,8 @@
 	.content {
 		display: flex;
 		background-color: #141d27;
+		z-index: 50;
+		position: relative;
 	}
 	.content-left {
 		flex-grow: 1;
@@ -285,5 +343,95 @@
 			}
 		}
 	}
+	.cart-list {
+		position: absolute;
+		left: 0;
+		bottom: 48px;
+		/*top: 0;*/
+		/*z-index: -1;*/
+		z-index: 49;
+		width: 100%;
+			transition: all 0.5s;
+		&.slide-enter-active, &.slide-leave {
+			transition: all 0.5s;
+			transform: translate3d(0, 0, 0);
+		}
+		&.slide-enter, &.slide-leave-to {
+			transform: translate3d(0,100%,0);
+		}
+		&.slide-enter-to {
+			transform: translate3d(0, 0, 0);
+		}
+		.header {
+			line-height: 40px;
+			height: 40px;
+			padding: 0 18px;
+			background-color: #f3f5f7;
+			border-bottom: 1px solid rgba(7,17,27,0.1);
+			.title {
+				float: left;
+				font-size: 14px;
+				color: rgb(7,17,27);
+			}
+			.clear {
+				float: right;
+				font-size: 12px;
+				color: rgb(0,160,220);
+			}
+		}
+		.list-content {
+			padding: 0 18px;
+			max-height: 217px;
+			overflow: auto;
+			background-color: #fff;
+			.food {
+				position: relative;
+				padding: 12px 0;
+				box-sizing: border-box;
+				border-bottom: rgba(7,17,27,0.1);
+				.name {
+					line-height: 24px;
+					font-size: 14px;
+					color: rgb(7,17,27);
+				}
+				.price {
+					position: absolute;
+					right: 90px;
+					bottom: 12px;
+					line-height: 24px;
+					font-size: 14px;
+					font-weight: 700;
+					color: rgb(240,20,20);
+					
+				}
+				.control {
+					position: absolute;
+					right: 0;
+					bottom: 6px;
+				}
+			}
+		}
+	}
+	
+		.list-mask {
+			position: fixed;
+			top: 0;
+			bottom: 0;
+			right: 0;
+			left: 0;
+			/*background-color: rgba(0,0,0,0.1);*/
+			z-index: 40;
+				background-color: rgba(7,17,27,0.6);
+			backdrop-filter: blur(10px);
+			transition: all 0.5s;
+			&.fade-enter-active, &.fade-leave-active {
+				opacity: 1;
+				background-color: rgba(7,17,27,0.6);
+			}
+			&.fade-enter,&.fade-leave-to {
+				opacity: 0;
+				background-color: rgba(7,17,27,0);
+			}
+		}
 }
 </style>
