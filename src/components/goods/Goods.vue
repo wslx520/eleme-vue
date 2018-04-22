@@ -15,7 +15,7 @@
         			<h1 class="title">{{item.name}}</h1>
         			<ul>
         				<li v-for="(food, f) in item.foods" class="food-item" :key="f">
-        					<div class="icon" @click="showFood"><img :src="food.icon" alt="" /></div>
+        					<div class="icon" @click="showFood(food, $event)"><img :src="food.icon" alt="" /></div>
         					<div class="content">
         						<h2 class="name">{{food.name}}</h2>
         						<p class="desc">{{food.description}}</p>
@@ -36,19 +36,14 @@
         		</li>
         	</ul>
         </div>
-        <transition name="expand" 
-        	@before-enter="expandBefore"
-        	@enter="expandEnter"
-        	@after-enter="expandAfter">
-        	<food v-show="foodShown"></food>
-        </transition>
+        
+        <food :showFlag="foodShown" :food="chosenFood" :startPoint="foodBox"></food>
         
         <cart :selectedFoods="selectedFoods" :delivery-price="seller.deliveryPrice" :min-price="seller.minPrice"></cart>
     </div>
 </template>
 <script>
 	import BScroll from 'better-scroll'
-	import Velocity from 'velocity-animate'
 	import Cart from '../cart/cart';
 	import CartControl from '../cartcontrol/cartcontrol';
 	import Food from '../food/food';
@@ -84,7 +79,8 @@
         		currentIndex: 0,
         		listHeight: [],
         		foodBox: {},
-        		foodShown: false
+        		foodShown: false,
+        		chosenFood: {}
         	}
         },
         computed: {
@@ -116,8 +112,8 @@
         },
         methods:{
         	scrollTo(e, t) {
-        		if (e._constructed) {
-        			return false;
+        		if (!e._constructed) {
+        			return;
         		}
         		console.log(e, t, this);
         		e.preventDefault();
@@ -128,7 +124,7 @@
         		this.mainScroller.scrollToElement(el, 300);
         	},
         	_initScroller() {
-        		console.log(this.$refs.main);
+//      		console.log(this.$refs.main);
         		let scrollY;
         		this.mainScroller = new BScroll(this.$refs.main, {
         			probeType: 3,
@@ -156,39 +152,25 @@
         			this.listHeight.push(height);
         		}
         	},
-        	showFood(e) {
+        	showFood(food, e) {
+        		console.log(food, e);
+        		if (!e._constructed) {
+        			return;
+        		}
+        		this.chosenFood = food;
         		const el = e.target;
         		const box = el.getBoundingClientRect();
-        		this.foodBox = box;
+//      		this.foodBox = box;
+				for (let b in box) {
+//					if (box.hasOwnProperty(b)) {
+//						console.log(b, box[b]);
+//					}
+				}
+//				this.foodBox = Object.assign({}, box);
+				this.foodBox = box.toJSON();
+				console.log(this.foodBox, box, Object.assign({}, box));
         		this.foodShown = true;
-        	},
-        	expandBefore(el) {
-        		el.style.opacity = 0;
-        		el.style.width = this.foodBox.width + 'px';
-        		el.style.height = this.foodBox.width + 'px';
-        		el.style.left = this.foodBox.left + 'px';
-        		el.style.top = this.foodBox.top + 'px';
-        		
-        	},
-        	expandEnter(el, done) {
-        		Velocity.animate(el, {
-        			width: '100%',
-        			height: '100%',
-        			left: 0, top: 0,
-        			opacity: 1
-        		}, {
-        			complete: done,
-        			duration: 500
-        		})
-        	},
-        	expandAfter(el) {
-        		el.style.opacity = 1;
-        		console.log(this.foodBox);
-//      		el.style.width = this.foodBox.width + 'px';
-//      		el.style.height = this.foodBox.width + 'px';
-//      		el.style.left = this.foodBox.left + 'px';
-//      		el.style.top = this.foodBox.top + 'px';
-//      		console.log(el);
+        		console.log(food, e);
         	}
         }
     }
@@ -292,7 +274,7 @@
 					/*height: 14px;*/
 					line-height: 14px;
 					font-size: 14px;
-					color: rgb(7,17,27);
+					color: $fontColor;
 				}
 				.desc,.extra {
 					line-height: 10px;
@@ -308,17 +290,6 @@
 						margin-right: 12px;
 					}
 				}
-				.price {
-					font-weight: 700;
-					line-height: 24px;
-					.now {
-						color: rgb(240,20,20);
-					}
-					.old {
-						font-size: 10px;
-						color: rgb(147,153,159);
-					}
-				}
 				.control {
 					float: right;
 				}
@@ -326,14 +297,16 @@
 		}
 	}
 }
-.expand-enter-active, .expand-leave-active {
-	opacity: 1;
-	width: 100%;
-	height: 100%;
-	left: 0;
-	top: 0;
-}
-.expand-enter, .expand-leave-to {
-	
+/*公用的*/
+.price {
+	font-weight: 700;
+	line-height: 24px;
+	.now {
+		color: rgb(240,20,20);
+	}
+	.old {
+		font-size: 10px;
+		color: rgb(147,153,159);
+	}
 }
 </style>
