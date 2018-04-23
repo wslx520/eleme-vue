@@ -36,7 +36,7 @@
         		</li>
         	</ul>
         </div>
-        
+        <async></async>
         <food :showFlag="foodShown" :food="chosenFood" :startPoint="foodBox"></food>
         
         <cart :selectedFoods="selectedFoods" :delivery-price="seller.deliveryPrice" :min-price="seller.minPrice"></cart>
@@ -46,7 +46,10 @@
 	import BScroll from 'better-scroll'
 	import Cart from '../cart/cart';
 	import CartControl from '../cartcontrol/cartcontrol';
-	import Food from '../food/food';
+//	import Food from '../food/food';
+
+    // 改为引入一个异步组件，异步组件声明方式与普通组件无异，但引入方式有差别
+	const Food = () => import(/* webpackChunkName:'food' */'../food/food')
 	const CODE_OK = 0;
     const iconMap = ['decrease', 'discount', 'special', 'invoice', 'guarantee'];
     // 获取 currentIndex 的纯函数, 也可选择将 currentIndex 写为计算属性,

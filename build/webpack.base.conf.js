@@ -52,7 +52,16 @@ module.exports = {
       {
         test: /\.js$/,
         loader: 'babel-loader',
-        include: [resolve('src'), resolve('test'), resolve('node_modules/webpack-dev-server/client')]
+        include: [
+        	resolve('src'), 
+        	resolve('test'), 
+        	resolve('node_modules/webpack-dev-server/client')
+        ],
+        options: {
+//      	presets: [['es2015', {modules: false}]],
+					comments: false,
+        	plugins: ['syntax-dynamic-import']
+        }
       },
       {
         test: /\.(png|jpe?g|gif|svg)(\?.*)?$/,
